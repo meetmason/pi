@@ -1,7 +1,7 @@
 import { defineProvider, modelsDevModels } from "../define.ts";
 import { googleThinkingLevels } from "../families/google.ts";
 import { modelsDevChatModels } from "../sources/models-dev.ts";
-import { GOOGLE_ALIAS_TARGETS } from "./google.ts";
+import { GOOGLE_ALIAS_TARGETS, googleInput } from "./google.ts";
 
 export default defineProvider({
 	id: "google-vertex",
@@ -24,7 +24,7 @@ export default defineProvider({
 					...model,
 					reasoning: source.reasoning,
 					...(thinkingLevelMap ? { thinkingLevelMap } : {}),
-					input: source.imageInput ? ["text", "image"] : ["text"],
+					input: googleInput(source),
 					cost: {
 						input: source.cost.input || 0,
 						output: source.cost.output || 0,

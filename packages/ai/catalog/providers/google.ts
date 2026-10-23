@@ -1,12 +1,20 @@
-import { defineProvider, modelsDevModels, withInputLimits } from "../define.ts";
+import { type ChatModel, defineProvider, modelsDevModels, withInputLimits } from "../define.ts";
 import { googleThinkingLevels } from "../families/google.ts";
-import { modelsDevChatModels, modelsDevCost } from "../sources/models-dev.ts";
+import { type ModelsDevModel, modelsDevChatModels, modelsDevCost } from "../sources/models-dev.ts";
 
 // Rolling aliases take their metadata from the model they currently point to.
 export const GOOGLE_ALIAS_TARGETS: Record<string, string> = {
 	"gemini-flash-latest": "gemini-3.5-flash",
 	"gemini-flash-lite-latest": "gemini-3.1-flash-lite",
 };
+
+/** Input modalities for Gemini models. Only the Google APIs send audio, so only they list it. */
+export function googleInput(source: ModelsDevModel): ChatModel["input"] {
+	const input: ChatModel["input"] = ["text"];
+	if (source.imageInput) input.push("image");
+	if (source.audioInput) input.push("audio");
+	return input;
+}
 
 export default defineProvider({
 	id: "google",
@@ -24,7 +32,7 @@ export default defineProvider({
 					...model,
 					reasoning: source.reasoning,
 					...(thinkingLevelMap ? { thinkingLevelMap } : {}),
-					input: source.imageInput ? ["text", "image"] : ["text"],
+					input: googleInput(source),
 					cost: modelsDevCost(source.cost),
 					contextWindow: source.contextWindow || 4096,
 					maxTokens: source.maxTokens || 4096,

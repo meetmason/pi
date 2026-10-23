@@ -28,6 +28,7 @@ Unified LLM API with provider collections, automatic auth resolution, token and 
   - [Validating Tool Arguments](#validating-tool-arguments)
   - [Complete Event Reference](#complete-event-reference)
 - [Image Input](#image-input)
+- [Audio Input](#audio-input)
 - [Image Generation](#image-generation)
 - [Classification](#classification)
 - [Thinking/Reasoning](#thinkingreasoning)
@@ -790,6 +791,29 @@ for (const block of response.content) {
   }
 }
 ```
+
+## Audio Input
+
+Gemini models on the Google APIs can process audio in user messages. Check `model.input.includes('audio')`; other models get a note in place of the audio.
+
+```typescript
+import { readFileSync } from 'fs';
+
+const model = models.getModel('google', 'gemini-3.5-flash')!;
+
+const response = await models.complete(model, {
+  messages: [{
+    role: 'user',
+    content: [
+      { type: 'text', text: 'What is said in this recording?' },
+      { type: 'audio', data: readFileSync('note.mp3').toString('base64'), mimeType: 'audio/mp3' }
+    ],
+    timestamp: Date.now()
+  }]
+});
+```
+
+Audio is sent inline with every request it is part of, and counts toward Gemini's 20 MB request limit.
 
 ## Image Generation
 

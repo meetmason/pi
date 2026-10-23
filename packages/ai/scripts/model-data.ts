@@ -50,8 +50,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isModalityList(value: unknown): value is ("text" | "image")[] {
-	return Array.isArray(value) && value.length > 0 && value.every((entry) => entry === "text" || entry === "image");
+function isModalityList(value: unknown): value is ("text" | "image" | "audio")[] {
+	return (
+		Array.isArray(value) &&
+		value.length > 0 &&
+		value.every((entry) => entry === "text" || entry === "image" || entry === "audio")
+	);
 }
 
 function readJsonObject(path: string, description: string, errors: string[]): Record<string, unknown> | undefined {

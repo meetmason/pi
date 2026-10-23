@@ -95,6 +95,7 @@ export interface ModelsDevModel {
 	/** Undefined when the model does not reason. */
 	reasoningOptions?: ModelsDevReasoningOption[];
 	imageInput: boolean;
+	audioInput: boolean;
 	textInput: boolean;
 	textOutput: boolean;
 	contextWindow?: number;
@@ -192,6 +193,7 @@ export function normalizeModelsDevModel(model: ModelsDevV2Model): ModelsDevModel
 		reasoning: reasoning?.supported === true,
 		reasoningOptions: reasoning?.supported ? reasoningOptions(reasoning) : undefined,
 		imageInput: input.some((modality) => modality === "image" || modality.startsWith("image/")),
+		audioInput: input.some((modality) => modality === "audio" || modality.startsWith("audio/")),
 		textInput: input.includes("text"),
 		textOutput: (model.modalities?.output ?? []).includes("text"),
 		contextWindow: model.limit?.context,

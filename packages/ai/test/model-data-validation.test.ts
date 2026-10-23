@@ -224,6 +224,20 @@ describe("generated model data validation", () => {
 		);
 	});
 
+	it("validates audio input and rejects unknown input modalities", () => {
+		const fixture = createFixture();
+		const model = fixture.values["chat:model-a"] as Record<string, unknown>;
+		const validate = () => {
+			writeFixtureData(fixture.dataDir, fixture.structure, fixture.values);
+			validateModelDataDirectory(fixture.structure, fixture.dataDir);
+		};
+
+		model.input = ["text", "image", "audio"];
+		expect(validate).not.toThrow();
+		model.input = ["text", "video"];
+		expect(validate).toThrow("invalid input modalities");
+	});
+
 	it("validates image models with output modalities and without chat limits", () => {
 		const fixture = createFixture();
 		const structure: ModelDataStructure = { "test-provider": { "image:image-a": "test-images" } };
