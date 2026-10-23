@@ -449,6 +449,12 @@ export interface ImageContent {
 	mimeType: string; // e.g., "image/jpeg", "image/png"
 }
 
+export interface AudioContent {
+	type: "audio";
+	data: string; // base64 encoded audio data
+	mimeType: string; // e.g., "audio/mp3", "audio/wav"
+}
+
 export interface ToolCall {
 	type: "toolCall";
 	id: string;
@@ -586,7 +592,7 @@ export interface SystemMessage {
 
 export interface UserMessage {
 	role: "user";
-	content: string | (TextContent | ImageContent)[];
+	content: string | (TextContent | ImageContent | AudioContent)[];
 	timestamp: number; // Unix timestamp in milliseconds
 }
 

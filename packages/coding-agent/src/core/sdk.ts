@@ -322,7 +322,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 										(arr[i - 1] as { type: "text"; text: string }).text === "Image reading is disabled."
 									),
 							);
-						return { ...msg, content: filteredContent };
+						return { ...msg, content: filteredContent } as Message;
 					}
 				}
 			}

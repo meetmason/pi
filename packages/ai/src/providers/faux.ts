@@ -2,6 +2,7 @@ import { createProvider, type Provider } from "../models.ts";
 import type {
 	AssistantMessage,
 	AssistantMessageEventStream,
+	AudioContent,
 	DeferredCancelOptions,
 	DeferredFetchOptions,
 	DeferredHandle,
@@ -164,7 +165,7 @@ function randomId(prefix: string): string {
 	return `${prefix}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
 }
 
-function contentToText(content: string | Array<TextContent | ImageContent>): string {
+function contentToText(content: string | Array<TextContent | ImageContent | AudioContent>): string {
 	if (typeof content === "string") {
 		return content;
 	}
@@ -173,7 +174,7 @@ function contentToText(content: string | Array<TextContent | ImageContent>): str
 			if (block.type === "text") {
 				return block.text;
 			}
-			return `[image:${block.mimeType}:${block.data.length}]`;
+			return `[${block.type}:${block.mimeType}:${block.data.length}]`;
 		})
 		.join("\n");
 }

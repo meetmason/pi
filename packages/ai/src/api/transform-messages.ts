@@ -1,6 +1,7 @@
 import type {
 	Api,
 	AssistantMessage,
+	AudioContent,
 	ImageContent,
 	Message,
 	Model,
@@ -11,6 +12,7 @@ import type {
 
 const NON_VISION_USER_IMAGE_PLACEHOLDER = "(image omitted: model does not support images)";
 const NON_VISION_TOOL_IMAGE_PLACEHOLDER = "(tool image omitted: model does not support images)";
+const NON_AUDIO_USER_AUDIO_PLACEHOLDER = "(audio omitted: model does not support audio)";
 const ERROR_TOOL_IMAGE_PLACEHOLDER = "(image attached after the tool results)";
 
 /** An error tool result split into a text-only result and the images to send after the tool results. */
@@ -39,8 +41,11 @@ export function splitErrorToolResultImages(msg: ToolResultMessage): SplitErrorTo
 	};
 }
 
-function replaceImagesWithPlaceholder(content: (TextContent | ImageContent)[], placeholder: string): TextContent[] {
-	const result: TextContent[] = [];
+function replaceImagesWithPlaceholder<T extends TextContent | AudioContent>(
+	content: (T | ImageContent)[],
+	placeholder: string,
+): (T | TextContent)[] {
+	const result: (T | TextContent)[] = [];
 	let previousWasPlaceholder = false;
 
 	for (const block of content) {
@@ -53,7 +58,30 @@ function replaceImagesWithPlaceholder(content: (TextContent | ImageContent)[], p
 		}
 
 		result.push(block);
-		previousWasPlaceholder = block.text === placeholder;
+		previousWasPlaceholder = block.type === "text" && block.text === placeholder;
+	}
+
+	return result;
+}
+
+function replaceAudioWithPlaceholder(
+	content: (TextContent | ImageContent | AudioContent)[],
+	placeholder: string,
+): (TextContent | ImageContent)[] {
+	const result: (TextContent | ImageContent)[] = [];
+	let previousWasPlaceholder = false;
+
+	for (const block of content) {
+		if (block.type === "audio") {
+			if (!previousWasPlaceholder) {
+				result.push({ type: "text", text: placeholder });
+			}
+			previousWasPlaceholder = true;
+			continue;
+		}
+
+		result.push(block);
+		previousWasPlaceholder = block.type === "text" && block.text === placeholder;
 	}
 
 	return result;
@@ -83,6 +111,23 @@ function downgradeUnsupportedImages<TApi extends Api>(messages: Message[], model
 	});
 }
 
+function downgradeUnsupportedAudio<TApi extends Api>(messages: Message[], model: Model<TApi>): Message[] {
+	if (model.input.includes("audio")) {
+		return messages;
+	}
+
+	return messages.map((msg) => {
+		if (msg.role === "user" && Array.isArray(msg.content)) {
+			return {
+				...msg,
+				content: replaceAudioWithPlaceholder(msg.content, NON_AUDIO_USER_AUDIO_PLACEHOLDER),
+			};
+		}
+
+		return msg;
+	});
+}
+
 /**
  * Normalize tool call ID for cross-provider compatibility.
  * OpenAI Responses API generates IDs that are 450+ chars with special characters like `|`.
@@ -99,9 +144,10 @@ export function transformMessages<TApi extends Api>(
 	// histories, old session files) so downstream code can rely on the type contract.
 	const normalizedMessages = messages.map((msg) => (msg.content == null ? { ...msg, content: [] } : msg));
 	const imageAwareMessages = downgradeUnsupportedImages(normalizedMessages, model);
+	const audioAwareMessages = downgradeUnsupportedAudio(imageAwareMessages, model);
 
 	// First pass: transform messages (unsupported image downgrade, thinking blocks, tool call ID normalization)
-	const transformed = imageAwareMessages.map((msg) => {
+	const transformed = audioAwareMessages.map((msg) => {
 		// System and user messages pass through unchanged
 		if (msg.role === "system" || msg.role === "user") {
 			return msg;

@@ -1669,16 +1669,18 @@ function convertMessages(
 					});
 				}
 			} else {
-				const blocks: ContentBlockParam[] = msg.content.map((item) => {
-					if (item.type === "text") {
-						return {
-							type: "text",
-							text: sanitizeSurrogates(item.text),
-						};
-					} else {
-						return convertImageBlock(item);
-					}
-				});
+				const blocks: ContentBlockParam[] = msg.content
+					.filter((item) => item.type !== "audio")
+					.map((item) => {
+						if (item.type === "text") {
+							return {
+								type: "text",
+								text: sanitizeSurrogates(item.text),
+							};
+						} else {
+							return convertImageBlock(item);
+						}
+					});
 				const filteredBlocks = blocks.filter((b) => {
 					if (b.type === "text") {
 						return b.text.trim().length > 0;
