@@ -94,4 +94,12 @@ describe("context token estimation", () => {
 			lastUsageIndex: 3,
 		});
 	});
+
+	it("estimates audio from its size", () => {
+		// 999,999 bytes of audio, about one minute at 128 kbps.
+		const audio = { type: "audio" as const, data: "A".repeat(1_333_332), mimeType: "audio/mp3" };
+		const context = normalizeContext({ messages: [{ role: "user", content: [audio], timestamp: 100 }] });
+
+		expect(estimateContextTokens(context).tokens).toBe(2_000);
+	});
 });

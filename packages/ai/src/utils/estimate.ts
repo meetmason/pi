@@ -22,6 +22,8 @@ export interface ContextUsageEstimate {
 
 const CHARS_PER_TOKEN = 3.5;
 const ESTIMATED_IMAGE_CHARS = 4800;
+// Gemini counts 32 tokens per second of audio; at 128 kbps that is one token per 500 bytes.
+const ESTIMATED_AUDIO_BYTES_PER_TOKEN = 500;
 
 export function calculateContextTokens(usage: Usage): number {
 	return usage.totalTokens || usage.input + usage.output + usage.cacheRead + usage.cacheWrite;
@@ -39,7 +41,12 @@ function estimateTextAndImageContentChars(content: string | Array<TextContent | 
 	if (typeof content === "string") return content.length;
 
 	let chars = 0;
-	for (const block of content) chars += block.type === "text" ? block.text.length : ESTIMATED_IMAGE_CHARS;
+	for (const block of content) {
+		if (block.type === "text") chars += block.text.length;
+		else if (block.type === "audio")
+			chars += ((block.data.length * 3) / 4 / ESTIMATED_AUDIO_BYTES_PER_TOKEN) * CHARS_PER_TOKEN;
+		else chars += ESTIMATED_IMAGE_CHARS;
+	}
 	return chars;
 }
 
